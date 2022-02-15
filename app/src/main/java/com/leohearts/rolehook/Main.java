@@ -6,6 +6,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -26,33 +27,20 @@ public class Main implements IXposedHookLoadPackage {
         }
         return re;
     }
-
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        if (lpparam.packageName.equals("com.parallel.space.pro")) {
-
-            Log.i(TAG, "handleLoadPackage: Loaded com.google.android.apps.photos");
-            XposedHelpers.findAndHookMethod("androidx.core.content.ContextCompat", lpparam.classLoader, "checkSelfPermission", Context.class, String.class, new XC_MethodReplacement() {
-                @Override
-                protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
-                    return 0;
-                }
-            });
-            XposedHelpers.findAndHookMethod("com.lbe.parallel.billing.f", lpparam.classLoader, "e", new XC_MethodReplacement() {
-                @Override
-                protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
-                    return true;
-                }
-            });
-        }
-        if (lpparam.packageName.equals("com.ctf.play")) {
-            Log.i(TAG, "handleLoadPackage: ctf");
-            XposedHelpers.findAndHookMethod("android.util.Base64", lpparam.classLoader, "encodeToString", new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    Log.i(TAG, "beforeHookedMethod: " + ((byte[])param.args[0]).toString());
-                }
-            });
-        }
+        Log.i(TAG, "loaded");
+        Class toHook = XposedHelpers.findClass("com.android.permissioncontroller.role.model.Role", lpparam.classLoader);
+        Log.i(TAG, toHook.toString());
+        XposedBridge.hookAllConstructors(toHook, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                Log.i(TAG, "Hooked");
+                param.args[1] = true;
+                param.args[16] = false;
+                param.args[17] = false;
+                param.args[18] = true;
+            }
+        });
     }
 }
